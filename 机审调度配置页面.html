@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机审调度系统 - 配置中心</title>
+<style>
+:root{--primary:#1664ff;--success:#00b42a;--warning:#ff7d00;--danger:#f53f3f;--bg:#f5f6f8;--text-main:#1d2129;--text-sub:#4e5969;--text-light:#86909c;--line:#e5e6eb;--white:#fff;--nav-bg:#1f2635;--nav-hover:#2d364a;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:var(--bg);color:var(--text-main);line-height:1.6;}
+.app{display:flex;height:100vh;}
+.sidebar{width:220px;flex-shrink:0;background:var(--nav-bg);color:#c9cdd4;position:fixed;top:0;bottom:0;left:0;padding:18px 0;overflow-y:auto;}
+.brand{font-size:15px;font-weight:700;color:#fff;padding:0 18px 16px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:10px;}
+.nav-item{display:block;width:calc(100% - 16px);margin:3px 8px;padding:9px 12px;border:none;border-radius:6px;background:transparent;color:#c9cdd4;text-align:left;cursor:pointer;font-size:13px;}
+.nav-item:hover{background:var(--nav-hover);}
+.nav-item.active{background:var(--primary);color:#fff;}
+.main{margin-left:220px;width:calc(100% - 220px);height:100vh;overflow-y:auto;padding:24px 28px 40px;}
+.page{display:none;max-width:1280px;margin:0 auto;}
+.page.active{display:block;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+.page-title{font-size:22px;font-weight:700;}
+.page-sub{color:var(--text-sub);font-size:13px;margin-top:4px;}
+.panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;}
+.btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#fff;color:var(--text-main);border-radius:6px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap;}
+.btn:hover{opacity:.85;}
+.btn.primary{border-color:var(--primary);background:var(--primary);color:#fff;}
+.btn.success{border-color:var(--success);background:var(--success);color:#fff;}
+.btn.warn{border-color:var(--warning);background:var(--warning);color:#fff;}
+.btn.danger{border-color:var(--danger);background:var(--danger);color:#fff;}
+.btn.sm{padding:4px 10px;font-size:12px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.status{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:12px;color:#fff;}
+.status.success{background:var(--success);}
+.status.warning{background:var(--warning);}
+.status.danger{background:var(--danger);}
+.status.gray{background:#86909c;}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;}
+.badge.primary{background:#e8f0fe;color:var(--primary);}
+.badge.success{background:#e8f7ee;color:var(--success);}
+.badge.gray{background:#f2f3f5;color:var(--text-sub);}
+.flow-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:14px;}
+.flow-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;transition:box-shadow .2s,border-color .2s;}
+.flow-card:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(22,100,255,.1);}
+.flow-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.flow-name{font-size:15px;font-weight:600;}
+.flow-meta{font-size:12px;color:var(--text-light);margin-top:3px;}
+.flow-chain{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:10px 0;font-size:12px;}
+.chain-node{background:#f0f4ff;border:1px solid #c5d5ff;border-radius:12px;padding:2px 8px;color:var(--primary);}
+.chain-node.parallel{background:#fff6e8;border-color:#ffd591;color:#9a5b00;}
+.chain-arrow{color:var(--text-light);}
+.flow-card-footer{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+.steps{display:flex;margin-bottom:20px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+.step-item{flex:1;display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;border-right:1px solid var(--line);}
+.step-item:last-child{border-right:none;}
+.step-item:hover{background:#f7f8fa;}
+.step-item.active{background:#edf3ff;}
+.step-item.completed{background:#f0faf4;}
+.step-num{width:24px;height:24px;border-radius:50%;background:#d9dde4;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-item.active .step-num{background:var(--primary);}
+.step-item.completed .step-num{background:var(--success);}
+.step-label{font-size:13px;line-height:1.3;}
+.step-title{font-weight:600;}
+.step-item.active .step-title{color:var(--primary);}
+.step-item.completed .step-title{color:var(--success);}
+.step-sub{font-size:11px;color:var(--text-light);}
+.wizard-body{min-height:360px;}
+.wizard-step{display:none;}
+.wizard-step.active{display:block;}
+.wizard-actions{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.form-grid.cols3{grid-template-columns:repeat(3,1fr);}
+.form-grid.cols1{grid-template-columns:1fr;}
+.form-item label{display:block;font-size:12px;color:var(--text-sub);margin-bottom:5px;font-weight:500;}
+.req{color:var(--danger);margin-left:2px;}
+input,select,textarea{width:100%;border:1px solid #cfd3dc;border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;color:var(--text-main);background:#fff;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);}
+textarea{resize:vertical;min-height:72px;}
+.range-wrap{display:flex;align-items:center;gap:10px;}
+.range-wrap input[type="range"]{flex:1;height:6px;border-radius:3px;background:#e5e6eb;border:none;padding:0;}
+.range-wrap input[type="range"]::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer;}
+.range-wrap input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer;border:none;}
+.range-wrap .range-val{font-size:13px;font-weight:600;color:var(--primary);min-width:40px;text-align:right;}
+.radio-group{display:flex;gap:16px;align-items:center;}
+.radio-group label{display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle;}
+th{background:#fafbfc;color:var(--text-sub);font-weight:600;font-size:12px;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbfc;}
+.table-wrap{border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.op-chain-visual{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:16px;background:#f7f8fa;border-radius:8px;margin-bottom:16px;min-height:64px;}
+.op-chip{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:4px 10px;font-size:12px;cursor:pointer;transition:box-shadow .15s;}
+.op-chip:hover{box-shadow:0 2px 8px rgba(22,100,255,.15);}
+.op-chip.active{border-color:var(--primary);background:#edf3ff;color:var(--primary);}
+.op-chip.parallel{background:#fff6e8;border-color:#ffd591;color:#9a5b00;}
+.op-chip .del{color:var(--danger);font-size:14px;line-height:1;margin-left:2px;}
+.op-chip .ratio-badge{font-size:10px;background:rgba(0,0,0,.07);border-radius:8px;padding:1px 5px;margin-left:3px;}
+.op-chip .prio-badge{font-size:10px;color:#8f959e;margin-right:2px;}
+.parallel-group{display:inline-flex;flex-direction:column;gap:4px;border:1.5px dashed #ffd591;border-radius:10px;padding:8px 10px;background:#fffbf2;position:relative;}
+.parallel-group::before{content:'并行';position:absolute;top:-9px;left:8px;font-size:10px;color:#9a5b00;background:#fffbf2;padding:0 4px;font-weight:600;}
+.parallel-group .op-chip{background:#fff6e8;border-color:#ffd591;color:#9a5b00;}
+.serial-group{display:inline-flex;align-items:center;gap:6px;}
+.add-op-btn{display:inline-flex;align-items:center;gap:4px;border:1px dashed #c9cdd4;border-radius:16px;padding:4px 10px;font-size:12px;color:var(--text-light);cursor:pointer;background:transparent;}
+.add-op-btn:hover{border-color:var(--primary);color:var(--primary);}
+.chain-arrow{color:var(--text-light);font-size:14px;}
+.op-chip.dragging{opacity:.4;}
+.op-chip.disabled{opacity:.45;filter:grayscale(.3);}
+.op-chip.serial-multi{max-width:320px;flex-wrap:wrap;height:auto;padding:5px 10px;}
+.kv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.kv-item{background:#fafbfc;border:1px solid var(--line);border-radius:8px;padding:10px;}
+.kv-item .k{font-size:11px;color:var(--text-light);margin-bottom:3px;}
+.kv-item .v{font-size:13px;font-weight:500;}
+.hint{padding:10px 14px;background:#f0f6ff;border-left:3px solid var(--primary);border-radius:0 6px 6px 0;font-size:13px;color:var(--text-sub);margin:10px 0;}
+.banner{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;gap:10px;}
+.banner.warning{background:#fff7e8;border:1px solid #ffd591;color:#9a5b00;}
+.banner.danger{background:#fff1f0;border:1px solid #ffccc7;color:#a1151a;}
+.banner.success{background:#f0faf4;border:1px solid #b7eb8f;color:#135200;}
+.tabs{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#f2f3f5;margin-bottom:16px;}
+.tab-btn{border:none;background:transparent;color:var(--text-sub);padding:8px 16px;cursor:pointer;font-size:13px;}
+.tab-btn.active{background:#fff;color:var(--primary);font-weight:600;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-start;justify-content:center;z-index:1000;padding:40px 20px;overflow-y:auto;}
+.modal-mask.active{display:flex;}
+.modal{background:#fff;border-radius:12px;border:1px solid var(--line);width:800px;max-width:100%;padding:24px;position:relative;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.modal-title{font-size:17px;font-weight:700;}
+.modal-close{width:28px;height:28px;border:none;background:#f2f3f5;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-sub);}
+.modal-close:hover{background:var(--line);}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);}
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-bottom:8px;cursor:pointer;}
+.list-row:hover{border-color:var(--primary);}
+.list-row.selected{border-color:var(--primary);background:#edf3ff;}
+.range-wrap{display:flex;align-items:center;gap:8px;}
+.range-wrap input[type=range]{flex:1;}
+.range-val{min-width:40px;font-size:12px;color:var(--text-sub);}
+.tiny{font-size:12px;color:var(--text-sub);}
+.muted{color:var(--text-light);font-size:12px;}
+.success-text{color:var(--success);font-size:13px;}
+.danger-text{color:var(--danger);font-size:13px;}
+.inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.section-title{font-size:14px;font-weight:600;margin-bottom:12px;}
+.log-detail{display:none;background:#fafcff;border:1px dashed #c9dbff;border-radius:6px;padding:10px;margin-top:6px;}
+.endpoint-card{border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:8px;background:#fafcff;}
+.method-tag{display:inline-block;background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;margin-right:6px;}
+.tag{display:inline-block;border-radius:10px;padding:2px 8px;font-size:11px;border:1px solid transparent;}
+.tag.blocking{color:#a1151a;border-color:#ffccc7;background:#fff2f0;}
+.tag.non-blocking{color:var(--primary);border-color:#b8d4ff;background:#eff6ff;}
+.op-detail-panel{background:#fafbfc;border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:12px;}
+@media(max-width:1100px){.form-grid{grid-template-columns:1fr;}.kv-grid{grid-template-columns:1fr 1fr;}.flow-list{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">机审调度系统</div>
+  <button class="nav-item active" data-page="s1">流程管理</button>
+  <button class="nav-item" data-page="s2" style="display:none">接入新模型/三方</button>
+  <button class="nav-item" data-page="s3" style="display:none">在线调整参数</button>
+  <button class="nav-item" data-page="s4">监控与告警</button>
+  <button class="nav-item" data-page="quota">配额管理</button>
+</aside>
+<main class="main">
+
+  <!-- S1 流程管理 -->
+  <section id="page-s1" class="page active">
+    <div class="page-header">
+      <div>
+        <div class="page-title">流程管理</div>
+        <div class="page-sub">管理审核业务流，支持新建、编辑和启用流程。</div>
+      </div>
+      <button class="btn primary" id="newFlowBtn">＋ 新建流程</button>
+    </div>
+    <div class="flow-list" id="flowList"></div>
+  </section>
+
+  <!-- S2 接入新模型/三方 -->
+  <section id="page-s2" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">接入新模型/三方</div>
+        <div class="page-sub">快速接入新的审核模型或第三方服务。</div>
+      </div>
+      <button class="btn primary" id="newModelBtn">＋ 新建接入</button>
+    </div>
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>模型名称</th><th>类型</th><th>接入方式</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+          <tbody id="modelIntegrationList">
+            <tr><td>confiant</td><td>三方审核</td><td>HTTP API</td><td><span class="status success">已上线</span></td><td>2024-01-15</td><td><button class="btn sm">编辑</button></td></tr>
+            <tr><td>tmt</td><td>三方审核</td><td>HTTP API</td><td><span class="status success">已上线</span></td><td>2024-01-20</td><td><button class="btn sm">编辑</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- S3 在线调整参数 -->
+  <section id="page-s3" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">在线调整参数</div>
+        <div class="page-sub">实时调整模型参数和阈值，无需重启服务。</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>参数名称</th><th>当前值</th><th>默认值</th><th>生效范围</th><th>最后修改</th><th>操作</th></tr></thead>
+          <tbody id="parameterList">
+            <tr><td>blacklist_timeout_ms</td><td>500</td><td>1000</td><td>全局</td><td>2024-03-10 14:30</td><td><button class="btn sm primary">调整</button></td></tr>
+            <tr><td>confiant_retry_count</td><td>3</td><td>2</td><td>confiant模型</td><td>2024-03-08 10:15</td><td><button class="btn sm primary">调整</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+<!-- S4 监控与告警 -->
+  <section id="page-s4" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">监控与告警</div>
+        <div class="page-sub">队列、流程、模型三维度全链路可观测。</div>
+      </div>
+    </div>
+    <div class="tabs" id="s4Tabs">
+      <button class="tab-btn active" data-tab="queue">队列监控</button>
+      <button class="tab-btn" data-tab="flow">流程监控</button>
+      <button class="tab-btn" data-tab="model">模型调用监控</button>
+    </div>
+    <div class="tab-panel active" data-tab-panel="queue">
+      <div id="queueMonitorContent"></div>
+    </div>
+    <div class="tab-panel" data-tab-panel="flow">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Op 节点</th><th>命中率</th><th>拒绝率</th><th>趋势</th></tr></thead>
+          <tbody id="flowMonitorBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-panel" data-tab-panel="model">
+      <div id="modelMonitorContent"></div>
+    </div>
+  </section>
+
+  <!-- 配额管理 -->
+  <section id="page-quota" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">配额管理</div>
+        <div class="page-sub">统一维护模型配额与生效策略。</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>模型</th><th>配额类型</th><th>配额数量</th><th>按小时均分</th><th>已消耗</th><th>操作</th></tr></thead>
+          <tbody id="quotaManagementBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<!-- 新建流程 Modal -->
+<div class="modal-mask" id="newFlowMask">
+<div class="modal" style="width:860px;">
+  <div class="modal-header">
+    <div class="modal-title">新建流程</div>
+    <button class="modal-close" id="newFlowClose">✕</button>
+  </div>
+  <div class="steps" id="nfSteps"></div>
+  <div class="wizard-body" id="nfBody"></div>
+  <div class="wizard-actions">
+    <button class="btn" id="nfPrev">上一步</button>
+    <button class="btn primary" id="nfNext">下一步</button>
+  </div>
+</div>
+</div>
+
+<!-- 配额调整 Modal -->
+<div class="modal-mask" id="quotaMask">
+<div class="modal" style="width:560px;">
+  <div class="modal-header">
+    <div class="modal-title">调整配额 — <span id="quotaModelName"></span></div>
+    <button class="modal-close" id="quotaClose">✕</button>
+  </div>
+  <div class="form-grid">
+    <div class="form-item"><label>配额类型</label><select id="quotaType"><option>DAY_LIMIT</option><option>MONTH_LIMIT</option></select></div>
+    <div class="form-item"><label>配额数量</label><input id="quotaAmount" type="number" value="500000"></div>
+    <div class="form-item"><label>按小时均分</label><select id="quotaSplit"><option>开</option><option>关</option></select></div>
+    <div class="form-item"><label>生效时间</label><select id="quotaEffect"><option>立即生效</option><option>次日00:00</option></select></div>
+    <div class="form-item" style="grid-column:1/-1;"><label>变更原因</label><textarea id="quotaReason" placeholder="请输入变更原因"></textarea></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" id="quotaCancel">取消</button>
+    <button class="btn primary" id="quotaConfirm">确认调整</button>
+  </div>
+  <div id="quotaResult" class="success-text" style="display:none;margin-top:8px;">配额调整已提交并生效。</div>
+</div>
+</div>
+
+<script>
+// Global quota limits (persisted to localStorage)
+const DEFAULT_QUOTA_LIMITS = {
+  confiant: { type: 'DAY_LIMIT', amount: 1000000, split: '开' },
+  tmt: { type: 'DAY_LIMIT', amount: 500000, split: '开' },
+  llm_content: { type: 'DAY_LIMIT', amount: 300000, split: '开' },
+  blacklist_service: { type: 'DAY_LIMIT', amount: 2000000, split: '关' }
+};
+function loadQuotaLimits() {
+  try { const s = localStorage.getItem('jishen_quota_limits'); return s ? JSON.parse(s) : DEFAULT_QUOTA_LIMITS; } catch(e) { return DEFAULT_QUOTA_LIMITS; }
+}
+function saveQuotaLimits() {
+  try { localStorage.setItem('jishen_quota_limits', JSON.stringify(quotaLimits)); } catch(e) {}
+}
+const quotaLimits = loadQuotaLimits();
+
+// Nav
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-' + btn.dataset.page).classList.add('active');
+  });
+});
+
+// Flow list — persisted to localStorage
+const DEFAULT_FLOWS = [
+  { id:'adx_patrol_inspection_flow', name:'ADX接巡检', biz:'adx_patrol_inspection', queue:'adx_patrol_inspection_queue', status:'active', trafficRatio:100,
+    ops:['fetch_ad_content','blacklist_check','confiant_check','violation_record'], opNodes:[] },
+  { id:'adx_first_audit_flow', name:'ADX先审后投', biz:'adx_first_audit', queue:'adx_first_audit_queue', status:'active', trafficRatio:100,
+    ops:['blacklist_check',['confiant_check','tmt_check'],'llm_content_check','audit_decision'], opNodes:[] }
+];
+function loadFlows() {
+  try { const s = localStorage.getItem('jishen_flows'); return s ? JSON.parse(s) : DEFAULT_FLOWS; } catch(e) { return DEFAULT_FLOWS; }
+}
+function saveFlows() {
+  try { localStorage.setItem('jishen_flows', JSON.stringify(flows)); } catch(e) {}
+}
+const flows = loadFlows();
+function renderFlows() {
+  document.getElementById('flowList').innerHTML = flows.map((f,idx) => {
+    const chain = f.ops.map(op => Array.isArray(op)
+      ? `<span class="chain-node parallel">${op.join(' ‖ ')}</span>`
+      : `<span class="chain-node">${op}</span>`
+    ).join('<span class="chain-arrow">→</span>');
+    const statusCls = f.status==='active'?'success':'gray';
+    const statusTxt = f.status==='active'?'启用':'草稿';
+    return `<div class="flow-card">
+      <div class="flow-card-header">
+        <div><div class="flow-name">${f.name}</div><div class="flow-meta">${f.id}</div></div>
+        <span class="status ${statusCls}">${statusTxt}</span>
+      </div>
+      <div class="flow-chain">${chain}</div>
+      <div class="flow-meta">业务线：${f.biz} &nbsp;|&nbsp; 队列：${f.queue} &nbsp;|&nbsp; 放量：${f.trafficRatio||100}%</div>
+      <div class="flow-card-footer">
+        <button class="btn sm" onclick="openEditFlow(${idx})">编辑</button>
+        <button class="btn sm danger" onclick="toggleFlow(${idx})">${f.status==='active'?'停用':'启用'}</button>
+      </div></div>`;
+  }).join('');
+}
+renderFlows();
+
+// Get all unique models from all flows
+function getAllModelsFromFlows() {
+  const models = new Set();
+  flows.forEach(flow => {
+    if(flow.opNodes && Array.isArray(flow.opNodes)) {
+      flow.opNodes.forEach(op => {
+        if(op.models && op.models.length > 0) {
+          op.models.forEach(m => models.add(m.name));
+        } else if(op.name) {
+          models.add(op.name);
+        }
+      });
+    }
+  });
+  return Array.from(models);
+}
+
+// Render quota management page
+function renderQuotaManagement() {
+  const models = getAllModelsFromFlows();
+  const tbody = document.getElementById('quotaManagementBody');
+  if(!tbody) return;
+
+  if(models.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light)">暂无模型数据</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = models.map(model => {
+    const limit = quotaLimits[model] || { type: 'DAY_LIMIT', amount: 1000000, split: '开' };
+    const consumed = Math.floor(limit.amount * (0.5 + Math.random() * 0.4)); // Mock consumed data
+    return `<tr>
+      <td>${model}</td>
+      <td>${limit.type}</td>
+      <td>${limit.amount.toLocaleString()}</td>
+      <td>${limit.split}</td>
+      <td>${consumed.toLocaleString()}</td>
+      <td><button class="btn sm primary quota-edit" data-model="${model}">调整配额</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// Render queue monitoring
+function renderQueueMonitoring() {
+  const container = document.getElementById('queueMonitorContent');
+  if(!container) return;
+
+  const queues = flows.map(f => ({
+    name: f.queue,
+    backlog: Math.floor(Math.random() * 10000),
+    threshold: 3000,
+    consumers: Math.floor(5 + Math.random() * 10),
+    status: Math.random() > 0.7 ? 'danger' : 'success'
+  }));
+
+  const hasWarning = queues.some(q => q.status === 'danger');
+  const warningBanner = hasWarning ? `<div class="banner warning">
+    <span>${queues.find(q => q.status === 'danger').name} 积压 ${queues.find(q => q.status === 'danger').backlog} 条，超阈值 ${queues.find(q => q.status === 'danger').threshold}</span>
+    <button class="btn warn sm" id="scaleBtn">一键扩容</button>
+  </div>` : '';
+
+  container.innerHTML = `${warningBanner}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>队列名称</th><th>当前积压</th><th>消费者数</th><th>状态</th></tr></thead>
+        <tbody>${queues.map(q => `<tr>
+          <td>${q.name}</td>
+          <td>${q.backlog}</td>
+          <td>${q.consumers}</td>
+          <td><span class="status ${q.status}">${q.status === 'danger' ? '告警' : '正常'}</span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+// Render flow monitoring
+function renderFlowMonitoring() {
+  const tbody = document.getElementById('flowMonitorBody');
+  if(!tbody) return;
+
+  const ops = new Set();
+  flows.forEach(flow => {
+    if(flow.opNodes && Array.isArray(flow.opNodes)) {
+      flow.opNodes.forEach(op => {
+        if(op.models && op.models.length > 0) {
+          op.models.forEach(m => ops.add(m.name));
+        } else if(op.name) {
+          ops.add(op.name);
+        }
+      });
+    }
+  });
+
+  tbody.innerHTML = Array.from(ops).map(op => {
+    const hitRate = Math.floor(40 + Math.random() * 60);
+    const rejectRate = (Math.random() * 10).toFixed(1);
+    const trends = ['稳定', '轻微上升', '上升', '下降'];
+    const trend = trends[Math.floor(Math.random() * trends.length)];
+    return `<tr><td>${op}</td><td>${hitRate}%</td><td>${rejectRate}%</td><td>${trend}</td></tr>`;
+  }).join('');
+}
+
+// Render model monitoring
+function renderModelMonitoring() {
+  const container = document.getElementById('modelMonitorContent');
+  if(!container) return;
+
+  const models = getAllModelsFromFlows();
+  const modelData = models.map(model => {
+    const limit = quotaLimits[model]?.amount || 1000000;
+    const calls = Math.floor(limit * (0.5 + Math.random() * 0.4));
+    const consumption = Math.floor((calls / limit) * 100);
+    const status = consumption > 90 ? 'danger' : consumption > 80 ? 'warning' : 'success';
+    return {
+      name: model,
+      calls,
+      successRate: (95 + Math.random() * 4).toFixed(1),
+      latency: Math.floor(50 + Math.random() * 500),
+      consumption,
+      status,
+      statusText: status === 'danger' ? '已熔断' : status === 'warning' ? '临近上限' : '未熔断'
+    };
+  });
+
+  const hasDanger = modelData.some(m => m.status === 'danger');
+  const banner = hasDanger ? `<div class="banner danger">
+    <span>${modelData.filter(m => m.status === 'danger').map(m => m.name).join('、')} 已熔断；${modelData.filter(m => m.status === 'warning').map(m => m.name).join('、')} 配额消耗 ${modelData.find(m => m.status === 'warning')?.consumption}%</span>
+    <span class="tiny">建议优先扩容并提升配额</span>
+  </div>` : '';
+
+  container.innerHTML = `${banner}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>模型</th><th>调用量</th><th>成功率</th><th>P99 延迟</th><th>配额消耗</th></tr></thead>
+        <tbody>${modelData.map(m => `<tr>
+          <td>${m.name}</td>
+          <td>${m.calls.toLocaleString()}</td>
+          <td>${m.successRate}%</td>
+          <td>${m.latency}ms</td>
+          <td>${m.consumption}%</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+// Initial render
+renderQuotaManagement();
+renderQueueMonitoring();
+renderFlowMonitoring();
+renderModelMonitoring();
+
+function openEditFlow(idx) {
+  const f = flows[idx];
+  editingFlowIdx = idx;
+  document.getElementById('newFlowMask').querySelector('.modal-title').textContent = '编辑流程';
+  opNodes = Array.isArray(f.opNodes) ? JSON.parse(JSON.stringify(f.opNodes)) : [];
+  nfQuotaConfig = f.quotaConfig ? JSON.parse(JSON.stringify(f.quotaConfig)) : {};
+  nfFormState = {
+    biz: f.biz || '',
+    source: f.source || 'adx',
+    conditions: f.conditions || (f.fieldPath ? [{fieldPath: f.fieldPath, operator: f.operator||'eq', matchValue: f.matchValue||''}] : []),
+    trafficRatio: f.trafficRatio || 100
+  };
+  nfWizard.reset();
+  document.getElementById('newFlowMask').classList.add('active');
+}
+
+function toggleFlow(idx) {
+  flows[idx].status = flows[idx].status==='active' ? 'draft' : 'active';
+  saveFlows();
+  renderFlows();
+}
+
+let editingFlowIdx = -1;
+
+// Wizard helper
+function buildWizard(stepsEl, bodyEl, steps, prevBtn, nextBtn, onFinish, onStep, onLeave) {
+  let cur = 0;
+  function render() {
+    stepsEl.innerHTML = steps.map((s,i) => {
+      const cls = i<cur?'step-item completed':i===cur?'step-item active':'step-item';
+      return `<div class="${cls}"><div class="step-num">${i<cur?'✓':i+1}</div><div class="step-label"><div class="step-title">${s.title}</div><div class="step-sub">${s.sub||''}</div></div></div>`;
+    }).join('');
+    bodyEl.innerHTML = `<div class="wizard-step active">${steps[cur].html}</div>`;
+    prevBtn.disabled = cur===0;
+    nextBtn.textContent = cur===steps.length-1?'完成':'下一步';
+    if(onStep) setTimeout(()=>onStep(cur), 10);
+  }
+  prevBtn.onclick = ()=>{ if(cur>0){ if(onLeave) onLeave(cur); cur--;render();} };
+  nextBtn.onclick = ()=>{ if(cur<steps.length-1){ if(onLeave) onLeave(cur); cur++;render();}else{onFinish&&onFinish();} };
+  render();
+  return {reset:()=>{cur=0;render();}};
+}
+
+
+// S1 New Flow Modal
+const nfSteps = [
+  { title:'业务类型配置', sub:'定义流量识别规则', html:`
+    <div class="form-grid">
+      <div class="form-item"><label>流程名称<span class="req">*</span></label><input id="nf_biz" placeholder="如 adx_first_audit"></div>
+      <div class="form-item"><label>数据源<span class="req">*</span></label><select id="nf_src"><option>adx</option><option>carty</option><option>手动</option></select></div>
+      <div class="form-item"><label>放量比例(%)<span class="req">*</span></label><input id="nf_traffic" type="number" min="1" max="100" value="100"></div>
+    </div>
+    <div style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label style="font-size:13px;font-weight:600;color:var(--text-main)">匹配条件</label>
+        <button class="btn sm primary" onclick="addNfCondition()">＋ 添加条件</button>
+      </div>
+      <div id="nf_conditions"></div>
+    </div>` },
+  { title:'流程编排', sub:'配置 Op 节点链', html:`
+    <div class="hint">点击「+ 添加节点」向流程中添加 Op，拖拽可调整顺序。</div>
+    <div class="op-chain-visual" id="nf_chain"><span class="muted">暂无节点，请添加</span></div>
+    <button class="add-op-btn" id="nf_addOp">＋ 添加节点</button>
+    <div class="op-detail-panel" id="nf_opDetail" style="display:none">
+      <div class="form-grid cols3">
+        <div class="form-item"><label>Op 名称</label><input id="nf_opName" placeholder="如 blacklist_check"></div>
+        <div class="form-item"><label>Op 类型</label><select id="nf_opType"><option>黑名单</option><option>三方审核</option><option>自研模型</option><option>大模型</option></select></div>
+        <div class="form-item"><label>执行模式</label><select id="nf_opMode" onchange="toggleParallelModels()"><option value="serial">serial（串行）</option><option value="parallel">parallel（并行）</option></select></div>
+      </div>
+      <div id="nf_serialConfig" style="margin-top:14px">
+        <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+          <label style="font-size:13px;font-weight:600;color:var(--text-main)">串行模型配置</label>
+          <button class="btn sm primary" onclick="addSerialModel()">＋ 添加模型</button>
+        </div>
+        <div class="table-wrap">
+          <table id="nf_serialModelTable">
+            <thead><tr><th style="width:40px">启用</th><th>模型名称</th><th style="width:220px">前置匹配条件</th><th style="width:100px">生效标记</th><th style="width:60px">操作</th></tr></thead>
+            <tbody id="nf_serialModelList"></tbody>
+          </table>
+        </div>
+        <div class="form-grid cols3" style="margin-top:14px">
+          <div class="form-item"><label>Op 流量比例</label><input id="nf_opRatio" type="number" min="1" max="100" value="100" placeholder="1-100"></div>
+          <div class="form-item"><label>优先级</label><input id="nf_opPrio" type="number" min="1" value="1" placeholder="数字越小越优先"></div>
+        </div>
+      </div>
+      <div id="nf_parallelConfig" style="display:none;margin-top:14px">
+        <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+          <label style="font-size:13px;font-weight:600;color:var(--text-main)">并行模型配置</label>
+          <button class="btn sm primary" onclick="addParallelModel()">＋ 添加模型</button>
+        </div>
+        <div class="table-wrap">
+          <table id="nf_modelTable">
+            <thead><tr><th style="width:40px">启用</th><th>模型名称</th><th style="width:220px">前置匹配条件</th><th style="width:100px">生效标记</th><th style="width:60px">操作</th></tr></thead>
+            <tbody id="nf_modelList"></tbody>
+          </table>
+        </div>
+        <div class="form-grid cols3" style="margin-top:14px">
+          <div class="form-item"><label>Op 流量比例</label><input id="nf_opRatioPar" type="number" min="1" max="100" value="100" placeholder="1-100"></div>
+          <div class="form-item"><label>优先级</label><input id="nf_opPrioPar" type="number" min="1" value="1" placeholder="数字越小越优先"></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;"><button class="btn primary sm" id="nf_opConfirm">确认添加</button></div>
+    </div>` },
+  { title:'配额配置', sub:'设置模型调用配额与降级', html:`<div id="nf_quotaBody"></div>` },
+  { title:'启用上线', sub:'确认并发布流程', html:`<div id="nf_previewBody"></div>` }
+];
+
+const nfMask = document.getElementById('newFlowMask');
+let nfQuotaConfig = {};
+let nfFormState = {
+  biz: '',
+  source: 'adx',
+  conditions: [],
+  trafficRatio: 100
+};
+
+function addNfCondition(path='', op='eq', val='') {
+  const container = document.getElementById('nf_conditions');
+  if(!container) return;
+  const div = document.createElement('div');
+  div.className = 'condition-row';
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 90px 1fr 28px;gap:8px;align-items:center;margin-bottom:8px';
+  div.innerHTML = `
+    <input placeholder="字段路径，如 adx.AdBehavior" class="cond-path" value="${path}">
+    <select class="cond-op" style="width:auto">
+      <option value="eq" ${op==='eq'?'selected':''}>eq</option>
+      <option value="ne" ${op==='ne'?'selected':''}>ne</option>
+      <option value="in" ${op==='in'?'selected':''}>in</option>
+      <option value="regex" ${op==='regex'?'selected':''}>regex</option>
+    </select>
+    <input placeholder="匹配值，如 2" class="cond-val" value="${val}">
+    <span style="color:var(--danger);cursor:pointer;font-size:18px;text-align:center;line-height:1" onclick="this.closest('.condition-row').remove()">×</span>
+  `;
+  container.appendChild(div);
+}
+
+function collectNfStep1() {
+  nfFormState.biz = document.getElementById('nf_biz')?.value.trim() || nfFormState.biz || '';
+  nfFormState.source = document.getElementById('nf_src')?.value || nfFormState.source || 'adx';
+  nfFormState.trafficRatio = parseInt(document.getElementById('nf_traffic')?.value || String(nfFormState.trafficRatio || 100)) || 100;
+  const condRows = document.querySelectorAll('#nf_conditions .condition-row');
+  if(condRows.length > 0) {
+    nfFormState.conditions = Array.from(condRows).map(row => ({
+      fieldPath: row.querySelector('.cond-path')?.value.trim() || '',
+      operator: row.querySelector('.cond-op')?.value || 'eq',
+      matchValue: row.querySelector('.cond-val')?.value.trim() || ''
+    }));
+  }
+}
+
+function fillNfStep1() {
+  const bizEl = document.getElementById('nf_biz'); if(bizEl) bizEl.value = nfFormState.biz || '';
+  const srcEl = document.getElementById('nf_src'); if(srcEl) srcEl.value = nfFormState.source || 'adx';
+  const tEl = document.getElementById('nf_traffic'); if(tEl) tEl.value = String(nfFormState.trafficRatio || 100);
+  const container = document.getElementById('nf_conditions');
+  if(container) {
+    container.innerHTML = '';
+    (nfFormState.conditions || []).forEach(c => addNfCondition(c.fieldPath, c.operator, c.matchValue));
+  }
+}
+
+function getOpModelNames() {
+  const names = [];
+  opNodes.forEach(op => {
+    (op.models && op.models.length > 0 ? op.models : [{name: op.name}]).forEach(m => {
+      if(m.name && !names.includes(m.name)) names.push(m.name);
+    });
+  });
+  return names;
+}
+
+function renderNfQuota() {
+  const body = document.getElementById('nf_quotaBody');
+  if(!body) return;
+  const modelNames = getOpModelNames();
+  if(modelNames.length === 0) {
+    body.innerHTML = '<div class="hint">流程编排中暂无模型，请先完成流程编排。</div>';
+    return;
+  }
+
+  // Calculate total quota usage across all flows for each model
+  const totalUsage = {};
+  flows.forEach((flow, flowIdx) => {
+    if(flowIdx === editingFlowIdx) return; // skip current editing flow
+    if(flow.quotaConfig) {
+      Object.entries(flow.quotaConfig).forEach(([model, cfg]) => {
+        totalUsage[model] = (totalUsage[model] || 0) + (cfg.amount || 0);
+      });
+    }
+  });
+
+  const rows = modelNames.map(name => {
+    const s = nfQuotaConfig[name] || {};
+    const currentAmount = s.amount || 1000000;
+    const usedByOthers = totalUsage[name] || 0;
+    const totalAfterSave = usedByOthers + currentAmount;
+    const limit = quotaLimits[name]?.amount || 0;
+    const isOverLimit = limit > 0 && totalAfterSave > limit;
+    const warningStyle = isOverLimit ? 'background:#fff1f0;border:2px solid #ff4d4f' : '';
+    const warningMsg = isOverLimit ? `<div style="color:#ff4d4f;font-size:11px;margin-top:2px">⚠ 超限：其他流程已用 ${usedByOthers.toLocaleString()}，本流程 ${currentAmount.toLocaleString()}，总计 ${totalAfterSave.toLocaleString()} > 配额管理限制 ${limit.toLocaleString()}</div>` : '';
+
+    const others = ['无降级', ...modelNames.filter(n => n !== name)];
+    const fallbackOpts = others.map(o => `<option value="${o}" ${(s.fallback||'无降级')===o?'selected':''}>${o}</option>`).join('');
+    return `<tr data-model="${name}" style="${warningStyle}">
+      <td>${name}${warningMsg}</td>
+      <td><select style="width:auto" class="q-type"><option value="DAY_LIMIT" ${(s.type||'DAY_LIMIT')==='DAY_LIMIT'?'selected':''}>DAY_LIMIT</option><option value="MONTH_LIMIT" ${s.type==='MONTH_LIMIT'?'selected':''}>MONTH_LIMIT</option></select></td>
+      <td><input type="number" class="q-amount" value="${currentAmount}" style="width:120px" onchange="renderNfQuota()"></td>
+      <td><select style="width:auto" class="q-split"><option value="开" ${(s.split||'开')==='开'?'selected':''}>开</option><option value="关" ${s.split==='关'?'selected':''}>关</option></select></td>
+      <td><select style="width:auto" class="q-fallback">${fallbackOpts}</select></td>
+    </tr>`;
+  }).join('');
+  body.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>模型</th><th>配额类型</th><th>配额数量</th><th>按小时均分</th><th>达配额后降级模型</th></tr></thead>
+    <tbody id="nf_quotaRows">${rows}</tbody>
+  </table></div>`;
+}
+
+function collectNfQuota() {
+  document.querySelectorAll('#nf_quotaRows tr[data-model]').forEach(tr => {
+    nfQuotaConfig[tr.dataset.model] = {
+      type: tr.querySelector('.q-type')?.value || 'DAY_LIMIT',
+      amount: parseInt(tr.querySelector('.q-amount')?.value || '1000000'),
+      split: tr.querySelector('.q-split')?.value || '开',
+      fallback: tr.querySelector('.q-fallback')?.value || '无降级'
+    };
+  });
+}
+
+function renderNfPreview() {
+  const body = document.getElementById('nf_previewBody');
+  if(!body) return;
+  collectNfQuota();
+  const biz = nfFormState.biz || '—';
+  const src = nfFormState.source || '—';
+  const traffic = nfFormState.trafficRatio || 100;
+  const groupMap = new Map();
+  opNodes.forEach((op, idx) => {
+    const prio = op.priority||(idx+1);
+    if(!groupMap.has(prio)) groupMap.set(prio, []);
+    groupMap.get(prio).push(op);
+  });
+  const chainText = Array.from(groupMap.entries()).sort((a,b)=>a[0]-b[0])
+    .map(([,nodes]) => nodes.length>1 ? `[${nodes.map(n=>n.name).join(' ‖ ')}]` : nodes[0].name).join(' → ') || '—';
+  const quotaRows = Object.entries(nfQuotaConfig).map(([name,cfg]) =>
+    `<tr><td>${name}</td><td>${cfg.type}</td><td>${(cfg.amount||0).toLocaleString()}</td><td>${cfg.split}</td><td>${cfg.fallback}</td></tr>`
+  ).join('');
+  const conditions = nfFormState.conditions || [];
+  const conditionsHtml = conditions.length > 0
+    ? conditions.map(c => `<span style="display:inline-block;background:#f0f4ff;border:1px solid #c5d5ff;border-radius:6px;padding:2px 8px;font-size:12px;margin:2px">${c.fieldPath} <b>${c.operator}</b> ${c.matchValue}</span>`).join(' AND ')
+    : '<span style="color:var(--text-light)">无</span>';
+  const fieldPath = conditions[0]?.fieldPath;
+  body.innerHTML = `
+    <div class="banner success" style="margin-bottom:14px"><span>✓ 所有配置已完成，点击「完成」将流程状态设为「启用」，实时生效，无需发版。</span></div>
+    <div class="kv-grid" style="margin-bottom:16px">
+      <div class="kv-item"><div class="k">业务线</div><div class="v">${biz}</div></div>
+      <div class="kv-item"><div class="k">数据源</div><div class="v">${src}</div></div>
+      <div class="kv-item"><div class="k">放量比例</div><div class="v">${traffic}%</div></div>
+      <div class="kv-item" style="grid-column:1/-1"><div class="k">匹配条件</div><div class="v" style="line-height:2">${conditionsHtml}</div></div>
+      <div class="kv-item" style="grid-column:1/-1"><div class="k">Op 节点链</div><div class="v" style="font-size:12px;word-break:break-all">${chainText}</div></div>
+    </div>
+    ${quotaRows ? `<div class="section-title">配额配置</div><div class="table-wrap"><table>
+      <thead><tr><th>模型</th><th>配额类型</th><th>配额数量</th><th>按小时均分</th><th>达配额后降级</th></tr></thead>
+      <tbody>${quotaRows}</tbody></table></div>` : ''}`;
+}
+
+const nfWizard = buildWizard(
+  document.getElementById('nfSteps'),
+  document.getElementById('nfBody'),
+  nfSteps,
+  document.getElementById('nfPrev'),
+  document.getElementById('nfNext'),
+  () => {
+    const biz = nfFormState.biz || 'new_flow';
+    const src = nfFormState.source || 'adx';
+    const traffic = nfFormState.trafficRatio || 100;
+
+    const newFlow = {
+      id: biz + '_flow',
+      name: biz.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+      biz, source: src, queue: biz + '_queue',
+      status: 'active', trafficRatio: traffic,
+      conditions: nfFormState.conditions || [],
+      ops: opNodes.map(op => op.name),
+      opNodes: JSON.parse(JSON.stringify(opNodes)),
+      quotaConfig: JSON.parse(JSON.stringify(nfQuotaConfig))
+    };
+
+    if(editingFlowIdx >= 0) {
+      flows[editingFlowIdx] = newFlow;
+      editingFlowIdx = -1;
+    } else {
+      flows.push(newFlow);
+    }
+
+    saveFlows();
+    nfMask.classList.remove('active');
+    renderFlows();
+  },
+  (cur) => {
+    // called AFTER DOM is rendered — fill/render new step
+    if(cur === 0) fillNfStep1();
+    if(cur === 1) renderOpChain();
+    if(cur === 2) renderNfQuota();
+    if(cur === 3) renderNfPreview();
+  },
+  (cur) => {
+    // called BEFORE DOM is replaced — collect current step data while DOM still exists
+    if(cur === 0) collectNfStep1();
+    if(cur === 2) collectNfQuota();
+  }
+);
+
+document.getElementById('newFlowBtn').onclick = () => {
+  opNodes = [];
+  nfQuotaConfig = {};
+  nfFormState = { biz: '', source: 'adx', conditions: [], trafficRatio: 100 };
+  editingFlowIdx = -1;
+  document.getElementById('newFlowMask').querySelector('.modal-title').textContent = '新建流程';
+  nfWizard.reset();
+  nfMask.classList.add('active');
+};
+document.getElementById('newFlowClose').onclick = () => nfMask.classList.remove('active');
+nfMask.addEventListener('click', e => { if(e.target===nfMask) nfMask.classList.remove('active'); });
+
+// Op chain builder
+let opNodes = [];
+let editingOpIdx = -1;
+
+function renderOpChip(op, idx) {
+  if(op.mode === 'parallel') {
+    let html = '';
+    if(op.models && op.models.length > 0) {
+      op.models.forEach(m => {
+        const ratio = Math.round((m.ratio||0.5)*100);
+        const disabledClass = m.enabled===false ? ' disabled' : '';
+        const markedBadge = m.effectStatus==='marked' ? '<span style="font-size:9px;background:#fff6e8;color:#9a5b00;border-radius:4px;padding:1px 4px;margin-left:3px">标</span>' : '';
+        html += `<span class="op-chip parallel${disabledClass}" draggable="true" data-idx="${idx}" onclick="editOpNode(${idx})" title="${m.enabled===false?'已禁用':''}">
+          <span class="prio-badge">P${op.priority||idx+1}</span>${m.name}<span class="ratio-badge">${ratio}%</span>${markedBadge}
+          <span class="del" onclick="event.stopPropagation();deleteOpNode(${idx})">×</span></span>`;
+      });
+    } else {
+      html += `<span class="op-chip parallel" draggable="true" data-idx="${idx}" onclick="editOpNode(${idx})">
+        <span class="prio-badge">P${op.priority||idx+1}</span>${op.name}
+        <span class="del" onclick="event.stopPropagation();deleteOpNode(${idx})">×</span></span>`;
+    }
+    return html;
+  } else {
+    const modelSummary = op.models && op.models.length > 0
+      ? op.models.map(m => {
+          const markedBadge = m.effectStatus==='marked' ? '<span style="font-size:9px;color:#9a5b00;margin-left:2px">标</span>' : '';
+          const disabledStyle = m.enabled===false ? 'opacity:.45;text-decoration:line-through;' : '';
+          return `<span style="font-size:11px;${disabledStyle}">${m.name}${markedBadge}</span>`;
+        }).join('<span style="color:#c9cdd4;margin:0 3px;font-size:10px">›</span>')
+      : op.name;
+    return `<span class="op-chip active serial-multi" draggable="true" data-idx="${idx}" onclick="editOpNode(${idx})">
+      <span class="prio-badge">P${op.priority||idx+1}</span>
+      <span style="display:inline-flex;align-items:center;gap:2px">${modelSummary}</span>
+      <span class="del" onclick="event.stopPropagation();deleteOpNode(${idx})">×</span></span>`;
+  }
+}
+
+function renderOpChain() {
+  const chain = document.getElementById('nf_chain');
+  if(!chain) return;
+  if(opNodes.length===0) {
+    chain.innerHTML='<span class="muted">暂无节点，请添加</span>';
+    return;
+  }
+
+  // Group nodes by priority value
+  const groupMap = new Map();
+  opNodes.forEach((op, idx) => {
+    const prio = op.priority || (idx+1);
+    if(!groupMap.has(prio)) groupMap.set(prio, []);
+    groupMap.get(prio).push({op, idx});
+  });
+  const groups = Array.from(groupMap.entries())
+    .sort((a,b) => a[0]-b[0])
+    .map(([prio, nodes]) => ({prio, nodes}));
+
+  let html = '';
+  groups.forEach((group, gi) => {
+    if(gi > 0) html += '<span class="chain-arrow">→</span>';
+    if(group.nodes.length > 1) {
+      html += '<div class="parallel-group">';
+      group.nodes.forEach(({op, idx}) => { html += renderOpChip(op, idx); });
+      html += '</div>';
+    } else {
+      const {op, idx} = group.nodes[0];
+      html += renderOpChip(op, idx);
+    }
+  });
+
+  chain.innerHTML = html;
+
+  chain.querySelectorAll('.op-chip').forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', e.target.dataset.idx);
+      e.target.classList.add('dragging');
+    });
+    chip.addEventListener('dragend', e => e.target.classList.remove('dragging'));
+    chip.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect='move'; });
+    chip.addEventListener('drop', e => {
+      e.preventDefault();
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      const toIdx = parseInt(e.currentTarget.dataset.idx);
+      if(fromIdx !== toIdx) {
+        const item = opNodes.splice(fromIdx, 1)[0];
+        opNodes.splice(toIdx, 0, item);
+        opNodes.forEach((op, idx) => op.priority = idx+1);
+        renderOpChain();
+      }
+    });
+  });
+}
+
+function toggleParallelModels() {
+  const mode = document.getElementById('nf_opMode')?.value;
+  const serial = document.getElementById('nf_serialConfig');
+  const parallel = document.getElementById('nf_parallelConfig');
+  if(!serial || !parallel) return;
+  if(mode === 'parallel') {
+    serial.style.display = 'none';
+    parallel.style.display = 'block';
+    if(document.getElementById('nf_modelList').children.length === 0) addParallelModel();
+  } else {
+    serial.style.display = 'block';
+    parallel.style.display = 'none';
+    if(document.getElementById('nf_serialModelList').children.length === 0) addSerialModel();
+  }
+}
+
+let serialModelCounter = 0;
+function addSerialModel() {
+  const id = ++serialModelCounter;
+  const tbody = document.getElementById('nf_serialModelList');
+  if(!tbody) return;
+  const tr = document.createElement('tr');
+  tr.dataset.mid = id;
+  tr.innerHTML = `
+    <td><input type="checkbox" checked style="width:auto;cursor:pointer" title="启用"></td>
+    <td><input type="text" placeholder="如 blacklist_service" style="border:none;background:transparent;padding:4px 0" value=""></td>
+    <td><input type="text" class="precondition" placeholder="如 field eq value" style="font-size:12px;padding:4px 8px" value=""></td>
+    <td><select style="width:auto;font-size:12px"><option value="active">生效</option><option value="marked">标记</option></select></td>
+    <td><span style="color:var(--danger);cursor:pointer;font-size:16px" onclick="this.closest('tr').remove()">×</span></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function getSerialModels() {
+  const rows = document.querySelectorAll('#nf_serialModelList tr');
+  return Array.from(rows).map(tr => ({
+    name: tr.querySelector('input[type=text]')?.value.trim() || '模型',
+    enabled: tr.querySelector('input[type=checkbox]')?.checked ?? true,
+    precondition: tr.querySelector('.precondition')?.value.trim() || '',
+    effectStatus: tr.querySelector('select')?.value || 'active'
+  }));
+}
+
+let parallelModelCounter = 0;
+function addParallelModel() {
+  const id = ++parallelModelCounter;
+  const tbody = document.getElementById('nf_modelList');
+  if(!tbody) return;
+  const tr = document.createElement('tr');
+  tr.dataset.mid = id;
+  tr.innerHTML = `
+    <td><input type="checkbox" checked style="width:auto;cursor:pointer" title="启用"></td>
+    <td><input type="text" placeholder="如 confiant" style="border:none;background:transparent;padding:4px 0" value=""></td>
+    <td><input type="text" class="precondition" placeholder="如 field eq value" style="font-size:12px;padding:4px 8px" value=""></td>
+    <td><select style="width:auto;font-size:12px"><option value="active">生效</option><option value="marked">标记</option></select></td>
+    <td><span style="color:var(--danger);cursor:pointer;font-size:16px" onclick="this.closest('tr').remove()">×</span></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function getParallelModels() {
+  const rows = document.querySelectorAll('#nf_modelList tr');
+  return Array.from(rows).map(tr => ({
+    name: tr.querySelector('input[type=text]')?.value.trim() || '模型',
+    enabled: tr.querySelector('input[type=checkbox]')?.checked ?? true,
+    precondition: tr.querySelector('.precondition')?.value.trim() || '',
+    effectStatus: tr.querySelector('select')?.value || 'active'
+  }));
+}
+
+function editOpNode(idx) {
+  editingOpIdx = idx;
+  const op = opNodes[idx];
+  const panel = document.getElementById('nf_opDetail');
+  if(!panel) return;
+  document.getElementById('nf_opName').value = op.name;
+  const modeEl = document.getElementById('nf_opMode');
+  if(modeEl) { modeEl.value = op.mode; toggleParallelModels(); }
+  if(op.mode === 'parallel') {
+    const tbody = document.getElementById('nf_modelList');
+    if(tbody) {
+      tbody.innerHTML = '';
+      parallelModelCounter = 0;
+      (op.models || []).forEach(m => {
+        const id = ++parallelModelCounter;
+        const tr = document.createElement('tr');
+        tr.dataset.mid = id;
+        tr.innerHTML = `
+          <td><input type="checkbox" ${m.enabled!==false?'checked':''} style="width:auto;cursor:pointer" title="启用"></td>
+          <td><input type="text" placeholder="如 confiant" style="border:none;background:transparent;padding:4px 0" value="${m.name||''}"></td>
+          <td><input type="text" class="precondition" placeholder="如 field eq value" style="font-size:12px;padding:4px 8px" value="${m.precondition||''}"></td>
+          <td><select style="width:auto;font-size:12px"><option value="active" ${(m.effectStatus||'active')==='active'?'selected':''}>生效</option><option value="marked" ${m.effectStatus==='marked'?'selected':''}>标记</option></select></td>
+          <td><span style="color:var(--danger);cursor:pointer;font-size:16px" onclick="this.closest('tr').remove()">×</span></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    const prioParEl = document.getElementById('nf_opPrioPar');
+    if(prioParEl) prioParEl.value = op.priority || idx+1;
+    const ratioParEl = document.getElementById('nf_opRatioPar');
+    if(ratioParEl) ratioParEl.value = op.ratio || 100;
+  } else {
+    const tbody = document.getElementById('nf_serialModelList');
+    if(tbody) {
+      tbody.innerHTML = '';
+      serialModelCounter = 0;
+      (op.models || []).forEach(m => {
+        const id = ++serialModelCounter;
+        const tr = document.createElement('tr');
+        tr.dataset.mid = id;
+        tr.innerHTML = `
+          <td><input type="checkbox" ${m.enabled!==false?'checked':''} style="width:auto;cursor:pointer" title="启用"></td>
+          <td><input type="text" placeholder="如 blacklist_service" style="border:none;background:transparent;padding:4px 0" value="${m.name||''}"></td>
+          <td><input type="text" class="precondition" placeholder="如 field eq value" style="font-size:12px;padding:4px 8px" value="${m.precondition||''}"></td>
+          <td><select style="width:auto;font-size:12px"><option value="active" ${(m.effectStatus||'active')==='active'?'selected':''}>生效</option><option value="marked" ${m.effectStatus==='marked'?'selected':''}>标记</option></select></td>
+          <td><span style="color:var(--danger);cursor:pointer;font-size:16px" onclick="this.closest('tr').remove()">×</span></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    const prioEl = document.getElementById('nf_opPrio');
+    if(prioEl) prioEl.value = op.priority || idx+1;
+    const ratioEl = document.getElementById('nf_opRatio');
+    if(ratioEl) ratioEl.value = op.ratio || 100;
+  }
+  panel.style.display='block';
+  document.getElementById('nf_opConfirm').textContent = '保存修改';
+}
+
+function deleteOpNode(idx) {
+  opNodes.splice(idx, 1);
+  renderOpChain();
+}
+
+document.getElementById('nfBody').addEventListener('click', e => {
+  if(e.target.id==='nf_addOp'||e.target.closest('#nf_addOp')) {
+    editingOpIdx = -1;
+    document.getElementById('nf_opName').value = '';
+    document.getElementById('nf_opDetail').style.display='block';
+    document.getElementById('nf_opConfirm').textContent = '确认添加';
+  }
+  if(e.target.id==='nf_opConfirm') {
+    const name = document.getElementById('nf_opName').value.trim()||'op_node';
+    const mode = document.getElementById('nf_opMode')?.value || 'serial';
+    let opData;
+    if(mode === 'parallel') {
+      const models = getParallelModels();
+      const priority = parseInt(document.getElementById('nf_opPrioPar')?.value || String(opNodes.length + 1));
+      const opRatio = parseInt(document.getElementById('nf_opRatioPar')?.value || '100');
+      opData = { name, type: '三方审核', mode, models, ratio: Number.isNaN(opRatio)?100:Math.max(1, Math.min(100, opRatio)), priority: Number.isNaN(priority) ? (opNodes.length+1) : priority };
+    } else {
+      const models = getSerialModels();
+      const priority = parseInt(document.getElementById('nf_opPrio')?.value || String(opNodes.length + 1));
+      const opRatio = parseInt(document.getElementById('nf_opRatio')?.value || '100');
+      opData = { name, type: '黑名单', mode, models, ratio: Number.isNaN(opRatio)?100:Math.max(1, Math.min(100, opRatio)), priority: Number.isNaN(priority)?(opNodes.length+1):priority };
+    }
+
+    if(editingOpIdx >= 0) {
+      opNodes[editingOpIdx] = opData;
+    } else {
+      opNodes.push(opData);
+    }
+
+    opNodes.sort((a,b)=>(a.priority||999)-(b.priority||999));
+    opNodes.forEach((op, idx) => { if(!op.priority) op.priority = idx + 1; });
+
+    renderOpChain();
+    document.getElementById('nf_opDetail').style.display='none';
+    editingOpIdx = -1;
+  }
+});
+
+// S4 Tabs
+document.getElementById('s4Tabs').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  document.querySelectorAll('#s4Tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[data-tab-panel]').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelector(`[data-tab-panel="${btn.dataset.tab}"]`).classList.add('active');
+});
+
+// Quota Modal
+document.getElementById('quotaClose').onclick = () => document.getElementById('quotaMask').classList.remove('active');
+document.getElementById('quotaCancel').onclick = () => document.getElementById('quotaMask').classList.remove('active');
+document.getElementById('quotaConfirm').onclick = () => {
+  const modelName = document.getElementById('quotaModelName').textContent;
+  const type = document.getElementById('quotaType').value;
+  const amount = parseInt(document.getElementById('quotaAmount').value);
+  const split = document.getElementById('quotaSplit').value;
+
+  quotaLimits[modelName] = { type, amount, split };
+  saveQuotaLimits();
+
+  document.getElementById('quotaResult').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('quotaMask').classList.remove('active');
+    renderQuotaManagement();
+    renderModelMonitoring();
+  }, 1200);
+};
+
+</script>
+</body>
+</html>
